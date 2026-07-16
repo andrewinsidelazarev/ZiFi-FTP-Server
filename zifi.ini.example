@@ -1,0 +1,9 @@
+; Параметры Wi-Fi, совместимые с обычным файлом /zifi/zifi.ini.
+SSID: "Имя сети"
+password: "Пароль Wi-Fi"
+
+; Параметры FTP ниже необязательны.
+ftp_user: zx
+ftp_password: zx
+ftp_port: 21
+ftp_timeout: 600

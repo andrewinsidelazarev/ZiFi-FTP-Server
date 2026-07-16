@@ -1,0 +1,17 @@
+# Результаты сборки; готовый WMF публикуется как файл GitHub Release.
+/ZIFIFTP.WMF
+/ZIFIFTP.lst
+/ZIFIFTP.sym
+
+# Локальные эталонные снимки и кэши тестов.
+/releases/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Локальные виртуальные окружения и файлы редакторов.
+.venv/
+.vscode/
+.idea/
+*.user
+*.suo
