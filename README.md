@@ -56,15 +56,15 @@
 Минимальная конфигурация:
 
 ```ini
-SSID: "Имя сети"
-password: "Пароль Wi-Fi"
+SSID: Имя сети
+password: Пароль Wi-Fi
 ```
 
 Полная конфигурация:
 
 ```ini
-SSID: "Имя сети"
-password: "Пароль Wi-Fi"
+SSID: Имя сети
+password: Пароль Wi-Fi
 ftp_user: zx
 ftp_password: zx
 ftp_port: 21
