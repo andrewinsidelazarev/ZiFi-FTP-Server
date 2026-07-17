@@ -169,6 +169,10 @@ UiErrorSd:         db "ERROR: no readable SD volume",0
 UiErrorDir:        db "ERROR: /zifi directory missing",0
 UiErrorIni:        db "ERROR: /zifi/zifi.ini missing",0
 UiErrorConfig:     db "ERROR: invalid zifi.ini",0
+UiErrorSsid:       db "ERROR: SSID missing or empty",0
+UiErrorPassword:   db "ERROR: password key missing",0
+UiErrorPort:       db "ERROR: invalid ftp_port",0
+UiErrorTimeout:    db "ERROR: invalid ftp_timeout",0
 UiErrorNoZifi:     db "ERROR: ZiFi not detected",0
 UiErrorWifi:       db "ERROR: Wi-Fi connection failed",0
 UiErrorIp:         db "ERROR: no DHCP IP address",0

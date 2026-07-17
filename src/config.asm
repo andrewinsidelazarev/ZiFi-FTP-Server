@@ -68,17 +68,17 @@ Config_Load:
 
         ld de,KeySsid
         call Ini_FindKey
-        jr nc,.parse_error
+        jr nc,.ssid_error
         ld de,WifiSsid
         ld b,32
         call Ini_CopyValue
         ld a,(WifiSsid)
         or a
-        jr z,.parse_error
+        jr z,.ssid_error
 
         ld de,KeyWifiPassword
         call Ini_FindKey
-        jr nc,.parse_error
+        jr nc,.password_error
         ld de,WifiPassword
         ld b,63
         call Ini_CopyValue
@@ -100,21 +100,21 @@ Config_Load:
         ld de,KeyFtpPort
         call Ini_FindKey
         jr nc,.skip_port
-        call Ini_ParseWord
-        jr c,.parse_error
+        call Ini_ParseWordValue
+        jr c,.port_error
         ld a,h
         or l
-        jr z,.parse_error
+        jr z,.port_error
         ld (FtpPort),hl
 .skip_port:
         ld de,KeyFtpTimeout
         call Ini_FindKey
         jr nc,.skip_timeout
-        call Ini_ParseWord
-        jr c,.parse_error
+        call Ini_ParseWordValue
+        jr c,.timeout_error
         ld a,h
         or l
-        jr z,.parse_error
+        jr z,.timeout_error
         ld (FtpTimeout),hl
 .skip_timeout:
         call Config_BuildCwjap
@@ -133,8 +133,17 @@ Config_Load:
 .file_error:
         ld a,3
         jr .fail
-.parse_error:
+.ssid_error:
         ld a,4
+        jr .fail
+.password_error:
+        ld a,5
+        jr .fail
+.port_error:
+        ld a,6
+        jr .fail
+.timeout_error:
+        ld a,7
 .fail:
         ld (ConfigError),a
         call Config_RestoreRoot
@@ -241,12 +250,16 @@ Config_TryFailed:
         ret
 
 ; DE — ключ вместе с двоеточием. Поиск идёт только с начала непустого участка
-; каждой строки, ASCII-регистр букв игнорируется. Выход: CF=1 и HL указывает на
-; значение после горизонтальных пробелов; CF=0 — ключ не найден.
+; каждой строки, ASCII-регистр букв игнорируется. Разделителями строк считаются
+; CR, LF и CRLF — старые ZiFi-файлы встречаются во всех трёх вариантах.
+; Выход: CF=1 и HL указывает на значение после горизонтальных пробелов;
+; CF=0 — ключ не найден.
 Ini_FindKey:
         ld (IniKeyPtr),de
         ld hl,IniBuffer
+        call Ini_SkipUtf8Bom
 .line:
+        call Ini_SkipLineBreaks
         call Ini_SkipHorizontal
         ld de,(IniKeyPtr)
         push hl
@@ -270,6 +283,8 @@ Ini_FindKey:
         or a
         jr z,.missing
         inc hl
+        cp 13
+        jr z,.line
         cp 10
         jr nz,.skip_line
         jr .line
@@ -281,6 +296,40 @@ Ini_FindKey:
 .missing:
         or a
         ret
+
+; Пропустить необязательную UTF-8 BOM EF BB BF только в начале файла.
+; При неполной сигнатуре вернуть HL к исходному байту без изменений.
+Ini_SkipUtf8Bom:
+        ld a,(hl)
+        cp #EF
+        ret nz
+        inc hl
+        ld a,(hl)
+        cp #BB
+        jr nz,.rewind_one
+        inc hl
+        ld a,(hl)
+        cp #BF
+        jr nz,.rewind_two
+        inc hl
+        ret
+.rewind_two:
+        dec hl
+.rewind_one:
+        dec hl
+        ret
+
+; Пропустить любую последовательность CR/LF. Это одновременно обрабатывает
+; классические CR, Unix LF, DOS/Windows CRLF и пустые строки между параметрами.
+Ini_SkipLineBreaks:
+        ld a,(hl)
+        cp 13
+        jr z,.one
+        cp 10
+        ret nz
+.one:
+        inc hl
+        jr Ini_SkipLineBreaks
 
 ; Пропустить только пробелы и TAB. CR/LF оставляются границами значения.
 Ini_SkipHorizontal:
@@ -363,6 +412,14 @@ Ini_TrimRight:
         jr z,.loop
         inc de
         ret
+
+; Числовые значения подчиняются тому же правилу, что строки: внешние двойные
+; кавычки необязательны. Закрывающая кавычка остановит обычный разбор цифр.
+Ini_ParseWordValue:
+        ld a,(hl)
+        cp '"'
+        jr nz,Ini_ParseWord
+        inc hl
 
 ; Разобрать беззнаковое десятичное слово по HL. Выход: HL — число,
 ; CF=1 — неверная запись или переполнение.

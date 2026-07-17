@@ -55,6 +55,18 @@ PLUGIN:
         cp 3
         ld hl,UiErrorIni
         jr z,.fatal
+        cp 4
+        ld hl,UiErrorSsid
+        jr z,.fatal
+        cp 5
+        ld hl,UiErrorPassword
+        jr z,.fatal
+        cp 6
+        ld hl,UiErrorPort
+        jr z,.fatal
+        cp 7
+        ld hl,UiErrorTimeout
+        jr z,.fatal
         ld hl,UiErrorConfig
         jr .fatal
 
